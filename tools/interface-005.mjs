@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {makeWorld,update,summonBoss} from '../src/game/world.mjs';
+import {createPresentation,BACKING_SCALE,STEP_SECONDS} from '../src/render/presentation.mjs';
+class Target{
+ constructor(){this.listeners={};this.style={};this.dataset={};this.checked=false;this.tagName='DIV';this.clientWidth=720;this.textContent='';this.captured=new Set();}
+ addEventListener(type,fn){(this.listeners[type]??=[]).push(fn);}
+ emit(type,extra={}){const event={preventDefault(){},pointerId:1,pointerType:'touch',clientX:110,clientY:50,target:this,...extra};for(const fn of this.listeners[type]??[])fn(event);}
+ getBoundingClientRect(){return {left:0,top:0,width:100,height:100};}
+ setPointerCapture(id){this.captured.add(id);}hasPointerCapture(id){return this.captured.has(id);}releasePointerCapture(id){this.captured.delete(id);}
+ focus(){}getAttribute(key){return this[key];}setAttribute(key,value){this[key]=value;}
+}
+const nodes=new Map(),document=new Target(),window=new Target();
+document.querySelector=s=>{if(!nodes.has(s))nodes.set(s,new Target());return nodes.get(s);};document.body=new Target();
+const canvas=document.querySelector('#game');canvas.parentElement=new Target();const transforms=[];canvas.getContext=()=>({setTransform(...args){transforms.push(args);}});
+window.innerWidth=700;window.innerHeight=900;window.scrollY=0;window.matchMedia=()=>({matches:false,addEventListener(){}});window.localStorage={getItem(){return null;},setItem(){}};
+const scenes=[],audio={setScene(s){scenes.push(s);},silence(){},unlock:async()=>true,tickMusic(){},play(){},diagnostics(){return {status:'available'};}};
+let now=0,raf;const performance={now:()=>now};const requestAnimationFrame=fn=>{raf=fn;};
+class Image{set src(value){this.complete=true;this.naturalWidth=32;this.onload();}}
+const source=(await fs.readFile(new URL('../src/main.mjs',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
+const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
+await new AsyncFunction('makeWorld','update','summonBoss','draw','createSoundEngine','createPresentation','BACKING_SCALE','STEP_SECONDS','window','document','Image','performance','requestAnimationFrame',source)(makeWorld,update,summonBoss,()=>{},()=>audio,createPresentation,BACKING_SCALE,STEP_SECONDS,window,document,Image,performance,requestAnimationFrame);
+const test=window.GALDORA_TEST,stick=nodes.get('#stick-area'),burst=nodes.get('#touch-burst');
+assert.equal(canvas.width,640);assert.equal(canvas.height,448);assert.deepEqual(transforms[0],[2,0,0,2,0,0]);
+stick.emit('pointerdown',{pointerId:11});burst.emit('pointerdown',{pointerId:22});
+assert.equal(test.diagnostics.stick.pointerId,11);assert.equal(test.diagnostics.burstQueued,true);assert.ok(test.diagnostics.stick.x>0);
+window.emit('pointercancel',{pointerId:22});assert.equal(test.diagnostics.burstQueued,false);assert.equal(test.diagnostics.stick.pointerId,11);
+window.emit('resize');assert.equal(test.diagnostics.stick.pointerId,null);assert.equal(test.diagnostics.stick.x,0);
+stick.emit('pointerdown',{pointerId:33});window.emit('blur');assert.equal(test.paused,true);assert.equal(test.diagnostics.stick.pointerId,null);
+test.pause();assert.equal(test.paused,false);
+for(let i=0;i<150;i++){now+=1000/120;raf(now);}assert.ok(Math.abs(test.diagnostics.renderPerformance.fps-120)<.01);assert.equal(test.diagnostics.renderPerformance.backingScale,2);
+test.summon();test.world.boss.defeated=true;burst.emit('pointerdown',{pointerId:44});assert.equal(test.diagnostics.burstQueued,false);
+now+=1000/120;raf(now);assert.equal(scenes.at(-1),'defeat');assert.ok(nodes.get('#status').textContent.startsWith('FINISHING'));
+test.start();assert.equal(test.world.frame,0);assert.equal(test.diagnostics.burstQueued,false);
+nodes.get('#boss-finale').emit('click');assert.equal(test.world.boss.hp,1);assert.equal(test.world.boss.x,243);assert.equal(test.world.player.y,112);assert.equal(test.diagnostics.demo,true);assert.equal(test.diagnostics.recordEligible,false);
+console.log('interface-005: PASS (fixed backing, two-pointer touch, cancel/resize/blur, 120Hz FPS, defeat gating/scene, restart)');

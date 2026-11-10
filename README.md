@@ -4,29 +4,30 @@ Original side-scrolling shooter, in development.
 
 **Play:** https://frontier-l-cmd.github.io/GALDORA/
 
-## Build 004 · Stage One
+## Build 005 · Stage One
 
-This is a playable development milestone, not the finished game or final Stage 1 artwork/balance.
+A playable development milestone, not the finished game or final Stage 1 artwork/balance.
 
 ### Changes in this build
 
-- The approach is shortened from 180 to 90 seconds, with six authored 15-second sections rather than simply doubling the enemy density.
-- Destroyable drifting wreckage creates route and shooting choices. Each arrival has a 1.5-second edge warning. The layout leaves at least a 75-pixel continuous safe band; wrecks take four normal hits and cannot trap the player in an unavoidable wall.
-- Boss core HP is halved from 360 to 180, wings from 40 to 22, and retreat timeout from 120 to 60 seconds. The approved attack sequence, aim warnings, bullet speeds and recovery windows are unchanged.
-- Touch movement is more responsive: a small continuous radial deadzone replaces the former 20% axis deadzone, and touch top speed is 30% higher. PC speed is unchanged. Pointer gestures reuse their initial layout geometry and unchanged HUD values are no longer rewritten each frame.
-- The page displays actual average rendering FPS, roughly once per second, to help identify device-specific performance. This is not a touch-latency measurement.
-- Pickup art is now derived from two genuinely generated original concepts: a gold triangular reactor and a cyan hexagonal shield core. The prepared 20×20 sprites use the existing palette and binary transparency.
-- Practice results are correctly labeled PRACTICE / UNRANKED.
+- Presentation interpolates between fixed 60 Hz simulation steps. Half-world-pixel placement and a fixed 640×448 canvas backing make motion finer without changing the 320×224 world, ship speed, collision rules or attack timing. The backing does not grow with device pixel ratio.
+- Player, enemy, projectile and fragment presentation uses bounded reusable pose records. Restarts, pause, focus changes, recycled pool slots and teleports reset or snap their histories instead of leaving trails or jumps.
+- A lethal boss hit now starts a 2.7-second finale: reactor failures, falling/tilting armor, detached wings, a final explosion and dispersing fragments. The result panel appears only after the body and debris have disappeared.
+- Hostile objects are cleared during the finale. The player cannot take a post-kill hit. Kill rewards are granted once, with the speed bonus calculated at the lethal hit rather than after the animation. Previously destroyed wings do not reappear or score twice.
+- Four optional synthesized defeat cues accompany the sequence. BGM yields during the defeat and the clear sting waits for the result. Pause/restart and mute clean up the audio.
+- **撃破演出をプレビュー** previews the finale immediately without recording a high score.
+
+Build 004's 90-second approach, destroyable wreckage, generated pickup designs, improved touch response and shortened boss fight remain in place. The approved attack warnings, bullet speeds, recovery windows and boss HP are unchanged in Build 005.
 
 ### Current playable scope
 
-- A 90-second approach in six authored sections, followed by Sky Warden.
-- Five enemy behaviors: wave, straight flight, telegraphed locked-target rush, stopping shooter and item carrier.
-- Carrier drops: shot chip (levels 1–3) and shield chip (up to three shields).
-- Three lives, two-second invulnerability after a miss, one shot level lost on a miss, chain scoring and five-second burst power.
-- Independently destructible boss wings and three health phases. Boss retreat after 60 seconds gives no boss kill/speed reward.
-- Manual-run high scores save locally when browser storage is available. Demo, preview and practice cannot enter records.
-- Adaptive touch UI: virtual stick, automatic shooting, burst/pause buttons, portrait/landscape arrangement and safe-area padding. Keyboard controls remain available.
+- Six authored 15-second approach sections, then Sky Warden.
+- Five enemy behaviors: wave, straight flight, locked-target rush, stopping shooter and item carrier.
+- Destroyable drifting wreckage with advance edge warnings and open travel lanes.
+- Shot chips (levels 1–3), shield chips (up to three shields), three lives, post-hit invulnerability, chain scoring and burst power.
+- Independently destructible boss wings and three health phases. Retreat after 60 seconds grants no boss kill or speed reward and does not play the kill finale.
+- Manual-run high scores saved locally when browser storage is available. Demo, preview and practice are unranked.
+- Adaptive touch controls: proportional stick, automatic fire, burst/pause buttons, portrait/landscape layout and safe-area padding. Keyboard controls remain available.
 
 ## Controls
 
@@ -34,26 +35,47 @@ Start with **出撃する** or Enter. The initial attract demo is automatic and 
 
 | Action | Keyboard | Touch UI |
 | --- | --- | --- |
-| Move | Arrows / WASD | Left stick, with proportional movement |
+| Move | Arrows / WASD | Left stick |
 | Shoot | Hold Z | Automatic |
 | Burst | X with full meter | BURST |
 | Pause / resume | P / Esc | Pause button |
-| Restart stage | Enter / start button | Start button |
+| Restart | Enter / start | Start button |
 
-Touch UI is selected by a coarse pointer or touch interaction. **タッチ操作UI** also selects it manually. Blur and hidden tabs pause play. The small bright center of the ship shows its collision center. Boss aim locks before firing: move away from the shown trajectory rather than circling continuously.
+Touch UI is selected by coarse pointer or touch interaction; **タッチ操作UI** also selects it manually. Leaving the tab pauses play. The ship's small bright center marks its collision center.
+
+## Build and test
+
+The repository now includes the editable modules, HTML template and focused regression tests, alongside the self-contained published page.
+
+Requires Node.js with ES module support. No package installation is needed.
+
+```sh
+npm test
+npm run bundle
+```
+
+`npm test` prepares the ten runtime PNG files from the checked-in `docs/index.html` archive if they are absent, then runs simulation/renderer, boss-finale, presentation, mock-interface and mock-audio checks. `npm run bundle` writes `docs/index.html` and `GALDORA-pilot.html` from `src/`, `index.html` and the prepared assets. To inspect the modular development page, prepare assets and serve the repository with a local static HTTP server. The bundled page can also be opened directly.
+
+GitHub Pages continues to publish `/docs`. Existing assets are not overwritten by the extraction command, so edits in `assets/` are retained when bundling.
 
 ## Implementation
 
-320×224 Canvas 2D, fixed 60 Hz simulation, deterministic seeded effects, bounded entity and audio pools. No external runtime dependencies, accounts, analytics or network requests during play. `docs/index.html` contains readable game modules, original synthesized score and ten runtime PNGs in one self-contained page. GitHub Pages uses the existing `/docs` publication route.
+Canvas 2D, fixed 60 Hz simulation, deterministic seeded effects and bounded entity/audio pools. No external runtime dependencies, accounts, analytics or network requests during play. `docs/index.html` includes twelve readable game modules, the original synthesized score and ten runtime PNGs.
 
-Useful motion systems were adapted from the author's SECTOR NOVA 2: frame-based timeline/formation expansion, aimed/fan angle math, short-tap retention and focus-safe input, warning-to-active attack states, locked-target rush sequencing, bounded gesture-unlocked audio and failure-tolerant score storage. Coordinates, graphics, stage data, pool handling, music and game rules are specific to GALDORA.
+Useful systems were adapted from the author's SECTOR NOVA 2: frame-based timeline/formation expansion, aimed/fan angle math, short-tap retention and focus-safe input, warning-to-active attack states, locked-target rush sequencing, bounded gesture-unlocked audio and failure-tolerant score storage. Coordinates, art, stage data, pool handling, music and game rules are specific to GALDORA.
 
 ## Verification and remaining work
 
-Build 004 automated checks passed: 36 logic cases / 38,599 checked simulation frames; 10 obstacle/tempo cases; 196 mock interface assertions; 261 renderer samples; 36,913 deterministic music/lifecycle checks; ten PNG palette/size/alpha checks. These counts are different types of checks, not user-play sessions.
+Build 005 checks pass:
 
-A reactive simulation cleared 27 boss scenarios at Lv1, zero shields and no invincibility with no misses, across nine starting positions and three phases. In a separate same-controller, no-burst comparison, boss completion changed from 73.27 to 39.55 seconds at Lv1, 36.40 to 19.60 at Lv2, and 31.97 to 16.45 at Lv3. This supports the existence of dodge paths; it does not prove human difficulty or mobile comfort. Actual Chrome manual input and real WebAudio checks are performed separately. Two 12-second music passages rendered without clipped or nonfinite samples; live stage/boss/pause/disable transitions cleaned up correctly. Subjective music listening is still pending.
+- Full-course deterministic simulation/renderer regression: 19,134 simulated frames, 651 rendered samples, finite draw coordinates, balanced canvas transforms and ten PNG assets. This uses an invincible automated controller, not a human clear or a difficulty test.
+- Ten boss-finale cases covering 1,661 fixed steps: timing, duplicate lethal hits, safe cleanup, one-time scoring, broken wings, retreat, restart, pause and unchanged balance values.
+- Simulated 30/60/90/120/144 Hz display schedules preserve identical game physics; fractional presentation, pool reuse, history bounds and reset cases pass.
+- Mock interface checks cover two pointers, cancellation, resize, blur, fixed canvas backing, FPS display, defeat input gating and restart.
+- Mock WebAudio checks cover defeat cues, throttling, the 12-voice cap, mute, lifecycle cleanup, unavailable audio and independent BGM control. These do not establish subjective sound quality.
 
-**Build 004 has not yet been validated on physical phones or tablets.** The changes respond to user phone-play feedback on Build 003; mock and cloud Chrome results do not establish the new on-device feel. Touch feel, multi-touch browser differences, Safari, gamepads, frame-time profiling and audio listening still need validation. The Stage 1 background, enemies and boss remain pilot artwork. Simulated 30/60/90/120/144 Hz display schedules preserve 60 simulation updates per second. Mock tests also verify that 240 pointer moves perform no repeated layout read, and an unchanged paused HUD performs no repeated property/attribute writes (1080 in the old version versus zero in the same 120-frame harness). Balance still needs player feedback.
+The bundled build was also operated in cloud Chrome: finale preview to result, keyboard movement/pause, touch-control selection and stick/pause input. Deterministic visual fixtures confirmed separated wings, absent boss body after the final explosion, and no early result panel. This is separate from automated simulation testing.
 
-Remaining scope includes final Stage 1 visuals and balance, music refinement, full five-level main weapon and subweapon systems, difficulties, route selection, the other eight stages and the complete campaign.
+**Build 005 has not been validated on physical phones or tablets.** Actual mobile smoothness, Safari, simultaneous physical touches, frame-time stability and listening quality still need device testing. Interpolation improves visual sampling but can add up to one 60 Hz tick (16.7 ms) of display delay; it is not a measured input-latency improvement. The fixed backing resolution bounds rendering cost, but does not guarantee every device's frame rate.
+
+Remaining scope includes final Stage 1 visuals and balance, music refinement, full five-level main weapon and subweapon systems, difficulty options, route selection, the other eight stages and the complete campaign.
