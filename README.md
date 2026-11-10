@@ -1,27 +1,45 @@
 # GALDORA
 
-GALDORA game development and browser preview.
+Original side-scrolling shooter, in development.
 
-## Play pilot 001
+**Play:** https://frontier-l-cmd.github.io/GALDORA/
 
-https://frontier-l-cmd.github.io/GALDORA/
+## Build 002 · Stage One
 
-A short, original horizontal-shooter art and motion prototype. This is not the complete game.
+This is a playable development milestone, not the finished game or final Stage 1 artwork/balance.
 
-- Click **出撃する** to start manual play.
-- Move: arrow keys or WASD. Hold Z: fire. X: burst when the gauge is full.
-- P / Escape: pause or resume. Enter: restart.
-- The initial demo mode flies automatically and is invincible. Uncheck it for manual play.
-- **ボスの動きを見る** jumps to the boss.
+- A 180-second approach in six authored sections, followed by the Sky Warden encounter.
+- Five enemy behaviors: wave, straight flight, telegraphed locked-target rush, stopping shooter, and item carrier.
+- Carrier drops: triangular shot chip (levels 1–3) and hexagonal shield chip (up to three shields).
+- Three lives, two-second invulnerability after a miss, one shot level lost on a miss, chain scoring, and five-second burst power.
+- Independently destructible boss wings, three health phases, and a locked-lane beam with a 1.5-second warning. Boss retreat after 120 seconds gives no boss kill/speed reward.
+- Optional original synthesized effects. Manual-run high scores save locally when browser storage is available. Demo and boss previews cannot enter records.
+- Initial adaptive touch UI: virtual stick, automatic shooting, burst/pause buttons, portrait/landscape arrangement, safe-area padding. Keyboard controls remain available.
 
-## Current scope
+## Controls
 
-320×224 Canvas 2D, fixed 60Hz simulation, three player poses, one enemy, a bird-machine boss with separate wings, two-layer backgrounds, a shortened 30-second approach, and a clear screen. The graphics are original AI-generated artwork prepared to a shared palette of at most 64 colors and at most 16 colors per actor.
+Start with **出撃する** or Enter. The initial attract demo is automatic and invincible.
 
-The deployable game is self-contained in `docs/index.html`, including its JavaScript and PNG data. No build step, server, or external runtime dependency is required.
+| Action | Keyboard | Touch UI |
+| --- | --- | --- |
+| Move | Arrows / WASD | Left stick |
+| Shoot | Hold Z | Automatic |
+| Burst | X with full meter | BURST |
+| Pause / resume | P / Esc | Pause button |
+| Restart stage | Enter / start button | Start button |
 
-Useful timeline and aimed/fan bullet logic was adapted from this account's [SECTOR NOVA 2](https://github.com/frontier-l-cmd/Sector-Nova2/tree/305ac1b6cd90f4c6a3ee139153b8f5443be09eea/sector-nova-2/src). The new game uses its own horizontal layout, artwork, capped pools, and seeded simulation.
+Touch UI is selected by a coarse pointer or touch interaction. The **タッチ操作UI** checkbox can also select it manually. Blur and hidden tabs pause play. The boss-preview button is an unranked, invincible test mode.
 
-## Not finished yet
+## Implementation
 
-The full nine-stage campaign, route selection, weapon growth, difficulty settings, saved records, BGM, mobile controls, and gamepad support are not implemented in this pilot. Art contrast, scrolling seams, balance, and sound still need refinement. Chrome was tested; other browsers and devices remain to be checked.
+320×224 Canvas 2D, fixed 60 Hz simulation, deterministic seeded effects, bounded enemy/bullet/effect/item pools. No external runtime dependencies, accounts, analytics, or network requests during play. `docs/index.html` contains readable game modules and the eight runtime PNGs in one self-contained page. GitHub Pages continues using the existing `/docs` publication route.
+
+Useful motion systems were adapted from the author's SECTOR NOVA 2: frame-based timeline/formation expansion, aimed/fan angle math, short-tap retention and focus-safe input, warning-to-active attack states, locked-target rush sequencing, bounded gesture-unlocked audio, and failure-tolerant score storage. Coordinates, graphics, stage data, pool handling and game rules are specific to GALDORA.
+
+## Verification and remaining work
+
+Logic regression checks cover the full course, deterministic replay, item/miss rules, pool caps, boss phases/parts/beam timing/retreat, and duplicate kill rewards. Mock interface checks cover keys, pointer cancellation, simultaneous stick/burst pointers, audio limits, storage failure and responsive sizing. Actual Chrome operation checks are separate from those mocks.
+
+**Not yet validated on physical phones or tablets.** Touch feel, multi-touch browser differences, Safari, gamepads, frame-time profiling and audio listening still need validation. The graphics are the original pilot set with clearer status/attack/item rendering, not the final art pass.
+
+Remaining scope includes final Stage 1 visual/balance work, music, full five-level main weapon and subweapon systems, difficulties, route selection, the other eight stages and the complete campaign.
