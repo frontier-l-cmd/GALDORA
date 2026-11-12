@@ -79,3 +79,15 @@ The bundled build was also operated in cloud Chrome: finale preview to result, k
 **Build 005 has not been validated on physical phones or tablets.** Actual mobile smoothness, Safari, simultaneous physical touches, frame-time stability and listening quality still need device testing. Interpolation improves visual sampling but can add up to one 60 Hz tick (16.7 ms) of display delay; it is not a measured input-latency improvement. The fixed backing resolution bounds rendering cost, but does not guarantee every device's frame rate.
 
 Remaining scope includes final Stage 1 visuals and balance, music refinement, full five-level main weapon and subweapon systems, difficulty options, route selection, the other eight stages and the complete campaign.
+
+## Build006 — branching trial (2026-11-12)
+
+After Stage1, choose AMBER SKYWAY (open sky/formations) or COBALT RUINS
+(wreckage/sentries). Each has a 60-second approach. Lives, equipment, burst and
+score carry over; clearing Stage2 ends this two-stage trial. Route selection has
+no timer and supports buttons/touch/keyboard focus. Stage2 bosses reuse existing
+art and the approved attack balance; unique bosses and the full nine-stage
+campaign are still future work. High scores use a new campaign-specific key.
+
+`npm test` covers legacy movement/audio/defeat plus route carryover, arrival,
+completion, invalid transitions, and UI selection/restart.

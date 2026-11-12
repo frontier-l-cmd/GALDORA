@@ -108,9 +108,18 @@ function defeatSprite(ctx,b,assets){
 function background(ctx,w,assets){
  rect(ctx,0,0,C.width,C.height,'#1d3e53');tile(ctx,assets['bg-far'],w.frame*.15);
  // Distant navigation structures remain outside the flight corridor.
- const section=Math.min(5,Math.floor(w.frame/(C.bossArrival/6)));
+ const section=Math.min(5,Math.floor(w.frame/(w.stage?.sectionFrames||900)));
+ // Route identity is visible without relying on tiny text or a color swap alone.
+ if(w.stage?.theme==='amber'){
+  rect(ctx,0,15,320,206,'#544d59');
+  for(let i=0;i<6;i++){const x=((i*74+444-w.frame*.12)%444+444)%444-80;rect(ctx,x,40+i%3*45,72,4,'#d1aa79');rect(ctx,x+20,46+i%3*45,39,2,'#897d7c');}
+  rect(ctx,256,36,26,26,'#c89965');rect(ctx,261,41,16,16,'#f0cf91');
+ }else if(w.stage?.theme==='cobalt'){
+  rect(ctx,0,15,320,206,'#162c45');
+  for(let i=0;i<7;i++){const x=((i*61+427-w.frame*.2)%427+427)%427-40;rect(ctx,x,26,17,40+i%3*13,'#304962');rect(ctx,x+5,35,2,13,'#6884a3');rect(ctx,x,173+i%2*13,20,48,'#304962');}
+ }
  if(section>=2){for(let i=0;i<3;i++){const x=((i*150+450-w.frame*.25)%450+450)%450-65;rect(ctx,x,188,58,3,'#2160a7');rect(ctx,x+9,191,6,28,'#2160a7');rect(ctx,x+40,191,5,28,'#2160a7');rect(ctx,x+4,186,5,2,mint);}}
- tile(ctx,assets['bg-near'],w.frame*.45);
+ if(w.stage?.theme==='cloud'||!w.stage)tile(ctx,assets['bg-near'],w.frame*.45);
  if(section>=3){for(let i=0;i<4;i++){const x=((i*113+452-w.frame*.65)%452+452)%452-30;rect(ctx,x,216,25,8,ink);rect(ctx,x+3,213,19,3,'#3f5c66');rect(ctx,x+5,211,3,2,accent);}}
 }
 export function draw(ctx,w,assets,{paused=false,demo=false,highScore=0,recordEligible=true}={}){
@@ -131,7 +140,7 @@ export function draw(ctx,w,assets,{paused=false,demo=false,highScore=0,recordEli
   const wing=assets['boss-wing'];for(let i=0;i<2;i++)if(b.wings[i]>0){ctx.save();ctx.translate(half(b.x-5),half(b.y));if(i)ctx.scale(1,-1);const height=40+Math.round(Math.sin(b.age*.045)*4);if(wing?.naturalWidth)ctx.drawImage(wing,-8,-Math.round(height*.85),64,height);ctx.restore();if(b.wingFlash?.[i]>0)rect(ctx,b.x+12,b.y+(i?30:-30),7,2,paper);}
   sprite(ctx,assets['boss-body'],b.x,b.y,80,64);if(b.hitFlash>0){rect(ctx,b.x-36,b.y-3,5,3,paper);rect(ctx,b.x-32,b.y+5,3,2,paper);}
   rect(ctx,166,18,144,3,ink);rect(ctx,166,18,Math.max(0,144*b.hp/C.bossHealth),3,accent);
-  text(ctx,'SKY WARDEN / PHASE '+b.phase,310,29,accent,'right',6);
+  text(ctx,(w.stage?.bossName||'SKY WARDEN')+' / PHASE '+b.phase,310,29,accent,'right',6);
   }
  }
  w.obstacles?.each(o=>wreckSprite(ctx,o,w.frame));
@@ -149,16 +158,16 @@ export function draw(ctx,w,assets,{paused=false,demo=false,highScore=0,recordEli
  w.bullets.each(x=>{rect(ctx,x.x-3,x.y-3,6,6,'#14273a');rect(ctx,x.x-2,x.y-2,4,4,'#f18180');rect(ctx,x.x-1,x.y-1,2,2,'#ffe5bc');});
  w.effects.each(e=>rect(ctx,e.x,e.y,e.life>12?2:1,e.life>12?2:1,e.color));
  // Two compact strips preserve a clear play area and legible status at native resolution.
- rect(ctx,0,0,320,15,'#0b202c');text(ctx,String(w.score).padStart(7,'0'),7,10);text(ctx,'LIFE '+p.lives,79,10);text(ctx,'LV '+(p.level||1),120,10,mint);text(ctx,'SH '+(p.shield||0),154,10,mint);text(ctx,'BURST',193,10,'#9fb3b0',undefined,6);rect(ctx,218,5,42,5,'#3f5c66');rect(ctx,218,5,Math.floor(w.burst*.42),5,w.burst>=100?accent:'#95d0c5');text(ctx,demo?'DEMO':w.chain?'x'+w.chain:'01',312,10,accent,'right',6);
- rect(ctx,0,221,320,3,ink);rect(ctx,0,221,Math.min(320,320*w.frame/C.bossArrival),2,b?accent:mint);
+ rect(ctx,0,0,320,15,'#0b202c');text(ctx,String(w.score).padStart(7,'0'),7,10);text(ctx,'LIFE '+p.lives,79,10);text(ctx,'LV '+(p.level||1),120,10,mint);text(ctx,'SH '+(p.shield||0),154,10,mint);text(ctx,'BURST',193,10,'#9fb3b0',undefined,6);rect(ctx,218,5,42,5,'#3f5c66');rect(ctx,218,5,Math.floor(w.burst*.42),5,w.burst>=100?accent:'#95d0c5');text(ctx,demo?'DEMO':w.chain?'x'+w.chain:(w.stage?.label||'01'),312,10,accent,'right',6);
+ rect(ctx,0,221,320,3,ink);rect(ctx,0,221,Math.min(320,320*w.frame/(w.stage?.bossArrival||C.bossArrival)),2,b?accent:mint);
  if(w.burstTicks){rect(ctx,0,15,320,1,paper);rect(ctx,0,15,1,206,paper);rect(ctx,319,15,1,206,paper);text(ctx,'BURST ACTIVE',160,213,accent,'center',6);}
- if(!b&&w.frame>C.bossArrival-180){rect(ctx,58,87,204,34,ink);text(ctx,'AIRSPACE CLOSED',160,99,accent,'center',8);text(ctx,'HEAVY INTERCEPTOR APPROACHING',160,111,paper,'center',6);}
- else if(!b&&w.frame%(C.bossArrival/6)<120){const title=w.section||'CLOUD APPROACH';rect(ctx,6,24,Math.min(208,title.length*4+8),13,ink);text(ctx,title,10,33,paper,undefined,7);}
+ if(!b&&w.frame>(w.stage?.bossArrival||C.bossArrival)-180){rect(ctx,58,87,204,34,ink);text(ctx,'AIRSPACE CLOSED',160,99,accent,'center',8);text(ctx,'HEAVY INTERCEPTOR APPROACHING',160,111,paper,'center',6);}
+ else if(!b&&w.frame%(w.stage?.sectionFrames||900)<120){const title=w.section||'CLOUD APPROACH';rect(ctx,6,24,Math.min(208,title.length*4+8),13,ink);text(ctx,title,10,33,paper,undefined,7);}
  if(paused||w.state!=='play'){
   rect(ctx,32,65,256,104,'#061923');rect(ctx,32,65,256,2,accent);
   text(ctx,paused?'PAUSED':w.state==='clear'?'STAGE COMPLETE':'GAME OVER',160,88,paper,'center',12);
   if(paused){text(ctx,'P / ESC / PAUSE TO RESUME',160,108,accent,'center',7);text(ctx,'FLIGHT DATA HELD',160,127,'#95d0c5','center',7);}
-  else{const outcome=w.state==='clear'?(w.clearReason==='timeout'?'INTERCEPTOR WITHDREW':'SKY WARDEN DESTROYED'):'ENTER / START TO RETRY';text(ctx,outcome,160,103,accent,'center',7);text(ctx,'SCORE '+String(w.score).padStart(7,'0'),160,119,paper,'center',7);text(ctx,demo?'DEMO / UNRANKED':!recordEligible?'PRACTICE / UNRANKED':'BEST '+String(Math.max(highScore,w.score)).padStart(7,'0'),160,132,'#95d0c5','center',7);text(ctx,'ENTER OR START / FLY AGAIN',160,152,paper,'center',7);}
+  else{const outcome=w.state==='clear'?(w.clearReason==='timeout'?'INTERCEPTOR WITHDREW':(w.stage?.bossName||'SKY WARDEN')+' DESTROYED'):'ENTER / START TO RETRY';text(ctx,outcome,160,103,accent,'center',7);text(ctx,'SCORE '+String(w.score).padStart(7,'0'),160,119,paper,'center',7);text(ctx,demo?'DEMO / UNRANKED':!recordEligible?'PRACTICE / UNRANKED':'BEST '+String(Math.max(highScore,w.score)).padStart(7,'0'),160,132,'#95d0c5','center',7);text(ctx,w.routeChoices?.length?'SELECT NEXT ROUTE BELOW':w.stageNumber===2?'TRIAL COMPLETE / FLY AGAIN':'ENTER OR START / FLY AGAIN',160,152,paper,'center',7);}
  }
 }
 

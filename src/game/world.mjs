@@ -2,19 +2,35 @@ import {CONFIG as C} from '../data/config.mjs';
 import {Pool,rng} from '../core/pool.mjs';
 import {TimelineRunner} from './timeline.mjs';
 import {aimed,fan} from './patterns.mjs';
-import {PILOT_STAGE} from '../data/pilot-stage.mjs';
+import {STAGES,ROUTE_CHOICES} from '../data/stages.mjs';
 const clamp=(v,a,b)=>Math.max(a,Math.min(v,b));
 const overlaps=(x,y,cx,cy,w,h,pad=0)=>Math.abs(x-cx)<=w/2+pad&&Math.abs(y-cy)<=h/2+pad;
 
-export function makeWorld(seed=718){
+export function makeWorld(seed=718,stageId='stage1'){
+ const stage=STAGES[stageId];
+ if(!stage)throw new Error('Unknown stage: '+stageId);
  return {
-  frame:0,timeline:new TimelineRunner(PILOT_STAGE),state:'play',section:'CLOUD GATE',warningTicks:0,
+  stage,stageId,stageNumber:stage.number,routeChoices:[],campaignMisses:0,
+  frame:0,timeline:new TimelineRunner(stage.timeline),state:'play',section:stage.timeline[0].name,warningTicks:0,
   clearReason:null,clearBonus:0,seed,random:rng(seed),score:0,chain:0,chainAt:-C.chainWindow-1,kills:0,misses:0,
   burst:C.burstStart,burstTicks:0,
   player:{...C.playerStart,bank:0,lives:C.playerLives,invul:C.startInvulnerability,cooldown:0,level:1,shield:0},
   enemies:new Pool(C.enemyLimit),shots:new Pool(C.playerBulletLimit),bullets:new Pool(C.enemyBulletLimit),
   obstacles:new Pool(C.obstacleLimit),effects:new Pool(C.effectLimit),items:new Pool(C.itemLimit),boss:null,events:[],debugInvincible:false
  };
+}
+
+// A fresh world prevents timeline/pool leakage between routes. Only durable run
+// progress crosses the checkpoint; health and equipment are never replenished.
+export function continueRoute(previous,routeId){
+ if(previous.stageId!=='stage1'||previous.state!=='clear'||!ROUTE_CHOICES.some(r=>r.id===routeId))
+  throw new Error('Route selection requires a completed first stage');
+ const next=makeWorld(previous.seed,routeId);
+ for(const key of ['lives','level','shield'])next.player[key]=previous.player[key];
+ next.score=previous.score;next.burst=previous.burst;
+ next.campaignMisses=(previous.campaignMisses||0)+previous.misses;
+ next.debugInvincible=previous.debugInvincible;
+ return next;
 }
 
 function fx(w,x,y,color,n=C.fx.killCount){
@@ -52,8 +68,8 @@ function hit(w){
 
 export function summonBoss(w){
  if(w.boss||w.state!=='play')return;
- w.enemies.clear();w.obstacles.clear();w.bullets.clear();w.frame=Math.max(w.frame,C.bossArrival);
- w.section='SKY WARDEN';w.warningTicks=0;
+ w.enemies.clear();w.obstacles.clear();w.bullets.clear();w.frame=Math.max(w.frame,w.stage.bossArrival);
+ w.section=w.stage.bossName;w.warningTicks=0;
  w.boss={...C.bossStart,hp:C.bossHealth,age:0,phase:1,wings:[C.wingHealth,C.wingHealth],
   start:w.frame,escape:false,defeated:false,warn:0,beamY:C.bossStart.y,beamTicks:0,
   beamHalfHeight:C.beamHalfHeight,beamX:C.bossStart.x+C.bossMuzzleX,nextBeam:C.beamFirstAge,
@@ -144,7 +160,7 @@ function updateEnemy(w,e){
 function finishStage(w,reason,bossBonus=0){
  if(w.state!=='play')return;
  w.clearReason=reason;w.clearBonus=bossBonus+(w.misses===0?C.noMissBonus:0);
- w.score+=w.clearBonus;w.state='clear';w.bullets.clear();w.events.push('clear');
+ w.score+=w.clearBonus;w.state='clear';w.routeChoices=w.stageId==='stage1'?ROUTE_CHOICES:[];w.bullets.clear();w.events.push('clear');
 }
 
 // Death runs in the fixed-step simulation, never in rendering or wall-clock time.
@@ -385,7 +401,7 @@ export function update(w,input={}){
   w.enemies.each(e=>{e.hp-=C.burstEnemyDamage;e.hitFlash=C.hitFlash;if(e.hp<=0)kill(w,e);});
   w.events.push('burst');
  }
- if(!w.boss&&w.frame>=C.bossArrival)summonBoss(w);
+ if(!w.boss&&w.frame>=w.stage.bossArrival)summonBoss(w);
  if(!w.boss)w.timeline.update(event=>{
   if(event.kind==='section'){w.section=event.entry.name;w.events.push('section');}
   else if(event.kind==='warning'){w.section=event.entry.name;w.warningTicks=C.bossWarning;}

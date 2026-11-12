@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {makeWorld,update,summonBoss} from '../src/game/world.mjs';
+import {makeWorld,update,summonBoss,continueRoute} from '../src/game/world.mjs';
 import {createPresentation,BACKING_SCALE,STEP_SECONDS} from '../src/render/presentation.mjs';
 class Target{
  constructor(){this.listeners={};this.style={};this.dataset={};this.checked=false;this.tagName='DIV';this.clientWidth=720;this.textContent='';this.captured=new Set();}
@@ -19,7 +19,7 @@ let now=0,raf;const performance={now:()=>now};const requestAnimationFrame=fn=>{r
 class Image{set src(value){this.complete=true;this.naturalWidth=32;this.onload();}}
 const source=(await fs.readFile(new URL('../src/main.mjs',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
-await new AsyncFunction('makeWorld','update','summonBoss','draw','createSoundEngine','createPresentation','BACKING_SCALE','STEP_SECONDS','window','document','Image','performance','requestAnimationFrame',source)(makeWorld,update,summonBoss,()=>{},()=>audio,createPresentation,BACKING_SCALE,STEP_SECONDS,window,document,Image,performance,requestAnimationFrame);
+await new AsyncFunction('makeWorld','update','summonBoss','continueRoute','draw','createSoundEngine','createPresentation','BACKING_SCALE','STEP_SECONDS','window','document','Image','performance','requestAnimationFrame',source)(makeWorld,update,summonBoss,continueRoute,()=>{},()=>audio,createPresentation,BACKING_SCALE,STEP_SECONDS,window,document,Image,performance,requestAnimationFrame);
 const test=window.GALDORA_TEST,stick=nodes.get('#stick-area'),burst=nodes.get('#touch-burst');
 assert.equal(canvas.width,640);assert.equal(canvas.height,448);assert.deepEqual(transforms[0],[2,0,0,2,0,0]);
 stick.emit('pointerdown',{pointerId:11});burst.emit('pointerdown',{pointerId:22});
@@ -34,3 +34,9 @@ now+=1000/120;raf(now);assert.equal(scenes.at(-1),'defeat');assert.ok(nodes.get(
 test.start();assert.equal(test.world.frame,0);assert.equal(test.diagnostics.burstQueued,false);
 nodes.get('#boss-finale').emit('click');assert.equal(test.world.boss.hp,1);assert.equal(test.world.boss.x,243);assert.equal(test.world.player.y,112);assert.equal(test.diagnostics.demo,true);assert.equal(test.diagnostics.recordEligible,false);
 console.log('interface-005: PASS (fixed backing, two-pointer touch, cancel/resize/blur, 120Hz FPS, defeat gating/scene, restart)');
+test.start();test.world.state='clear';test.world.routeChoices=[{id:'routeA',name:'Amber',description:'Sky'},{id:'routeB',name:'Cobalt',description:'Ruins'}];test.world.score=1234;test.world.player.lives=2;
+test.step(0);assert.equal(nodes.get('#route-panel').hidden,false);
+nodes.get('#route-b').emit('click');assert.equal(test.world.stageId,'routeB');assert.equal(test.world.score,1234);assert.equal(test.world.player.lives,2);assert.equal(nodes.get('#route-panel').hidden,true);
+nodes.get('#route-a').emit('click');assert.equal(test.world.stageId,'routeB');
+test.world.state='clear';test.step(0);assert.equal(nodes.get('#trial-complete').hidden,false);test.start();test.step(0);assert.equal(nodes.get('#trial-complete').hidden,true);assert.equal(test.world.stageId,'stage1');
+console.log('interface-006: PASS (selection, duplicate click ignored, end screen, restart)');

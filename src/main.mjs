@@ -1,4 +1,4 @@
-import {makeWorld,update,summonBoss} from './game/world.mjs';
+import {makeWorld,update,summonBoss,continueRoute} from './game/world.mjs';
 import {draw} from './render/draw.mjs';
 import {createPresentation,BACKING_SCALE,STEP_SECONDS} from './render/presentation.mjs';
 import {createSoundEngine} from './audio.mjs';
@@ -9,7 +9,7 @@ await Promise.all(names.map(name=>new Promise(resolve=>{
  img.src=window.GALDORA_ASSETS?.[name]||`assets/${name}.png`;
 })));
 const $=s=>document.querySelector(s),canvas=$('#game'),ctx=canvas.getContext('2d'),auto=$('#auto'),status=$('#status'),soundToggle=$('#sound'),musicToggle=$('#music');
-const sound=createSoundEngine(window),keys=new Set(),highScoreKey='galdora.highScore.v1';
+const sound=createSoundEngine(window),keys=new Set(),highScoreKey='galdora.highScore.campaign006';
 let world=makeWorld(),paused=false,last=performance.now(),acc=0,burstQueued=false;
 const presentation=createPresentation();
 presentation.reset(world);
@@ -48,6 +48,7 @@ function readBest(){
 }
 bestScore=readBest();world.debugInvincible=auto.checked;
 function saveResult(){
+ if(world.state==='clear'&&world.routeChoices?.length&&recordEligible)return;
  if(world.state==='play'||runRecorded)return;
  runRecorded=true;
  if(!recordEligible||auto.checked)return;
@@ -97,6 +98,15 @@ function start({demo=false}={}){
  auto.checked=!!demo;world=makeWorld();world.debugInvincible=!!demo;paused=false;recordEligible=!demo;runRecorded=false;
  resetInput();sound.setScene('clear');sound.silence();sound.setScene('stage');void sound.unlock();canvas.focus({preventScroll:true});
 }
+function chooseRoute(id){
+ if(world.state!=='clear'||!world.routeChoices?.some(route=>route.id===id))return;
+ const next=continueRoute(world,id);if(!next)return;
+ world=next;world.debugInvincible=auto.checked;paused=false;runRecorded=false;
+ resetInput();sound.setScene('stage');void sound.unlock();canvas.focus({preventScroll:true});
+ show();
+}
+$('#route-a')?.addEventListener('click',()=>chooseRoute('routeA'));
+$('#route-b')?.addEventListener('click',()=>chooseRoute('routeB'));
 function pause(){
  if(world.state!=='play')return;
  paused=!paused;resetInput();if(paused){sound.setScene('paused');sound.silence({preserveMusic:true});}else{sound.setScene(world.boss?.defeated?'defeat':world.boss?'boss':'stage');void sound.unlock();}canvas.focus({preventScroll:true});
@@ -207,6 +217,13 @@ function input(){
  return {left:keys.has('ArrowLeft')||keys.has('a')||stickX<0,right:keys.has('ArrowRight')||keys.has('d')||stickX>0,up:keys.has('ArrowUp')||keys.has('w')||stickY<0,down:keys.has('ArrowDown')||keys.has('s')||stickY>0,fire:touchMode||keys.has('z'),burst,touch:touchMode,axisX:touchMode?stickX:undefined,axisY:touchMode?stickY:undefined};
 }
 function show(fraction=1){
+ const choices=world.state==='clear'?world.routeChoices??[]:[];
+ setValue($('#route-panel'),'hidden',!choices.length);
+ setValue($('#trial-complete'),'hidden',!(world.state==='clear'&&world.stageNumber===2));
+ for(let i=0;i<2;i++){
+  const route=choices[i],button=$(i?'#route-b':'#route-a');
+  setValue(button,'textContent',route?`${route.name} — ${route.description}`:'');
+ }
  saveResult();
  sound.setScene(paused?'paused':world.state!=='play'?world.state:world.boss?.defeated?'defeat':world.boss?'boss':'stage');
  sound.tickMusic();
@@ -247,7 +264,7 @@ function frame(now){
  show(paused||world.state!=='play'?1:acc/STEP_SECONDS);requestAnimationFrame(frame);
 }
 window.GALDORA_TEST={
- get world(){return world;},get paused(){return paused;},start,pause,
+ get world(){return world;},get paused(){return paused;},start,pause,chooseRoute,
  summon(){recordEligible=false;summonBoss(world);presentation.reset(world);},
  step(n,inputOverride={fire:true}){
   recordEligible=false;

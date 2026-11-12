@@ -1,11 +1,11 @@
 {
   "name": "galdora-art-pilot",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "type": "module",
   "scripts": {
     "assets": "node tools/extract-assets.mjs",
-    "test": "node tools/extract-assets.mjs && node tools/smoke-005.mjs && node tools/boss-defeat-005.mjs && node tools/motion-005.mjs && node tools/interface-005.mjs && node tools/audio-005.mjs",
+    "test": "node tools/extract-assets.mjs && node tools/smoke-005.mjs && node tools/boss-defeat-005.mjs && node tools/motion-005.mjs && node tools/interface-005.mjs && node tools/audio-005.mjs && node tools/routes-006.mjs",
     "bundle": "node tools/extract-assets.mjs && node tools/bundle.mjs"
   }
 }
