@@ -1259,7 +1259,7 @@ function resize(){
   const compact=window.innerWidth>window.innerHeight&&window.innerHeight<=540;
   const top=(canvas.parentElement.getBoundingClientRect?.().top??140)+(window.scrollY||0);
   const controls=compact?70:180;
-  const budget=compact?Math.max(100,window.innerHeight-110):Math.max(100,window.innerHeight-Math.max(0,top)-controls);
+  const budget=compact?Math.max(160,window.innerHeight-110):Math.max(180,window.innerHeight-Math.max(0,top)-controls);
   scale=Math.min(available/320,budget/224);
  }
  canvas.style.aspectRatio='320 / 224';

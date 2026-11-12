@@ -49,3 +49,10 @@ const html=await fs.readFile(new URL('../index.html',import.meta.url),'utf8');as
 console.log('interface-007: PASS (direct manual trial routes, fixed equipment, unranked, normal restart, in-screen selector)');
 
 nodes.get('#stage-select').emit('click');assert.equal(test.world.state,'clear');assert.equal(nodes.get('#route-panel').hidden,false);assert.equal(test.diagnostics.recordEligible,false);assert.equal(test.diagnostics.demo,false);nodes.get('#route-a').emit('click');assert.equal(test.world.stageId,'routeA');assert.equal(test.world.player.level,2);assert.equal(test.diagnostics.recordEligible,false);console.log('stage-select debug: PASS');
+// Short viewports retain enough game height for two in-screen touch choices.
+for(const [width,height] of [[390,844],[320,568],[844,390],[667,375]]){
+ window.innerWidth=width;window.innerHeight=height;canvas.parentElement.clientWidth=width>height?width-244:width-24;
+ nodes.get('#touch-mode').checked=true;nodes.get('#touch-mode').emit('change');window.emit('resize');
+ assert.ok(parseFloat(canvas.style.height)>=150,`${width}x${height} selector space`);
+}
+console.log('interface-007 sizing: PASS (320/390 portrait, 667/844 landscape)');
