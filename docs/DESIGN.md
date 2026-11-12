@@ -10,3 +10,8 @@ Route selection is deliberately untimed for the mobile prototype; the full-game
 score across stages. Preserve responsive input, interpolation, short pacing,
 fair boss warnings and the existing defeat sequence. No new purchased assets or
 external services. Publish to existing docs/ GitHub Pages after tests.
+
+Build007: user requested no-scroll in-screen route selection and direct Stage2
+practice. Selector is inside .screen; each route has a direct manual trial button.
+Trial begins with 3 lives, LV2 and shield1; no high-score writes. Normal Stage1
+and earned carryover are unchanged. Mobile/landscape layout uses compact controls.

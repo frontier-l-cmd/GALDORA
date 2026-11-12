@@ -1,3 +1,4 @@
+import {ROUTE_CHOICES} from './data/stages.mjs';
 import {makeWorld,update,summonBoss,continueRoute} from './game/world.mjs';
 import {draw} from './render/draw.mjs';
 import {createPresentation,BACKING_SCALE,STEP_SECONDS} from './render/presentation.mjs';
@@ -98,6 +99,22 @@ function start({demo=false}={}){
  auto.checked=!!demo;world=makeWorld();world.debugInvincible=!!demo;paused=false;recordEligible=!demo;runRecorded=false;
  resetInput();sound.setScene('clear');sound.silence();sound.setScene('stage');void sound.unlock();canvas.focus({preventScroll:true});
 }
+function stageSelect(){
+ auto.checked=false;world=makeWorld();world.player.level=2;world.player.shield=1;
+ world.state='clear';world.clearReason='preview';world.routeChoices=ROUTE_CHOICES;
+ paused=false;recordEligible=false;runRecorded=false;resetInput();
+ sound.setScene('clear');sound.silence();canvas.focus({preventScroll:true});show();
+}
+$('#stage-select')?.addEventListener('click',stageSelect);
+function trialRoute(id){
+ if(id!=='routeA'&&id!=='routeB')return;
+ auto.checked=false;world=makeWorld(718,id);world.player.level=2;world.player.shield=1;
+ paused=false;recordEligible=false;runRecorded=false;resetInput();
+ sound.setScene('clear');sound.silence();sound.setScene('stage');void sound.unlock();
+ canvas.focus({preventScroll:true});show();
+}
+$('#trial-a')?.addEventListener('click',()=>trialRoute('routeA'));
+$('#trial-b')?.addEventListener('click',()=>trialRoute('routeB'));
 function chooseRoute(id){
  if(world.state!=='clear'||!world.routeChoices?.some(route=>route.id===id))return;
  const next=continueRoute(world,id);if(!next)return;
@@ -264,7 +281,7 @@ function frame(now){
  show(paused||world.state!=='play'?1:acc/STEP_SECONDS);requestAnimationFrame(frame);
 }
 window.GALDORA_TEST={
- get world(){return world;},get paused(){return paused;},start,pause,chooseRoute,
+ get world(){return world;},get paused(){return paused;},start,pause,chooseRoute,trialRoute,stageSelect,
  summon(){recordEligible=false;summonBoss(world);presentation.reset(world);},
  step(n,inputOverride={fire:true}){
   recordEligible=false;

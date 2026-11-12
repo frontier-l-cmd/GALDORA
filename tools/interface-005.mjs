@@ -1,3 +1,4 @@
+import {ROUTE_CHOICES} from '../src/data/stages.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {makeWorld,update,summonBoss,continueRoute} from '../src/game/world.mjs';
@@ -19,7 +20,7 @@ let now=0,raf;const performance={now:()=>now};const requestAnimationFrame=fn=>{r
 class Image{set src(value){this.complete=true;this.naturalWidth=32;this.onload();}}
 const source=(await fs.readFile(new URL('../src/main.mjs',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
-await new AsyncFunction('makeWorld','update','summonBoss','continueRoute','draw','createSoundEngine','createPresentation','BACKING_SCALE','STEP_SECONDS','window','document','Image','performance','requestAnimationFrame',source)(makeWorld,update,summonBoss,continueRoute,()=>{},()=>audio,createPresentation,BACKING_SCALE,STEP_SECONDS,window,document,Image,performance,requestAnimationFrame);
+await new AsyncFunction('ROUTE_CHOICES','makeWorld','update','summonBoss','continueRoute','draw','createSoundEngine','createPresentation','BACKING_SCALE','STEP_SECONDS','window','document','Image','performance','requestAnimationFrame',source)(ROUTE_CHOICES,makeWorld,update,summonBoss,continueRoute,()=>{},()=>audio,createPresentation,BACKING_SCALE,STEP_SECONDS,window,document,Image,performance,requestAnimationFrame);
 const test=window.GALDORA_TEST,stick=nodes.get('#stick-area'),burst=nodes.get('#touch-burst');
 assert.equal(canvas.width,640);assert.equal(canvas.height,448);assert.deepEqual(transforms[0],[2,0,0,2,0,0]);
 stick.emit('pointerdown',{pointerId:11});burst.emit('pointerdown',{pointerId:22});
@@ -40,3 +41,11 @@ nodes.get('#route-b').emit('click');assert.equal(test.world.stageId,'routeB');as
 nodes.get('#route-a').emit('click');assert.equal(test.world.stageId,'routeB');
 test.world.state='clear';test.step(0);assert.equal(nodes.get('#trial-complete').hidden,false);test.start();test.step(0);assert.equal(nodes.get('#trial-complete').hidden,true);assert.equal(test.world.stageId,'stage1');
 console.log('interface-006: PASS (selection, duplicate click ignored, end screen, restart)');
+for(const [button,id] of [['#trial-a','routeA'],['#trial-b','routeB']]){
+ nodes.get(button).emit('click');assert.equal(test.world.stageId,id);assert.equal(test.world.frame,0);assert.equal(test.world.player.lives,3);assert.equal(test.world.player.level,2);assert.equal(test.world.player.shield,1);assert.equal(test.diagnostics.recordEligible,false);assert.equal(test.diagnostics.demo,false);assert.equal(nodes.get('#route-panel').hidden,true);
+}
+test.start();assert.equal(test.world.stageId,'stage1');assert.equal(test.diagnostics.recordEligible,true);
+const html=await fs.readFile(new URL('../index.html',import.meta.url),'utf8');assert.ok(html.indexOf('id="route-panel"')>html.indexOf('</canvas>'));assert.ok(html.indexOf('id="route-panel"')<html.indexOf('id="touch-controls"'));
+console.log('interface-007: PASS (direct manual trial routes, fixed equipment, unranked, normal restart, in-screen selector)');
+
+nodes.get('#stage-select').emit('click');assert.equal(test.world.state,'clear');assert.equal(nodes.get('#route-panel').hidden,false);assert.equal(test.diagnostics.recordEligible,false);assert.equal(test.diagnostics.demo,false);nodes.get('#route-a').emit('click');assert.equal(test.world.stageId,'routeA');assert.equal(test.world.player.level,2);assert.equal(test.diagnostics.recordEligible,false);console.log('stage-select debug: PASS');

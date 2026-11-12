@@ -91,3 +91,8 @@ campaign are still future work. High scores use a new campaign-specific key.
 
 `npm test` covers legacy movement/audio/defeat plus route carryover, arrival,
 completion, invalid transitions, and UI selection/restart.
+
+## Build007 — direct route practice / in-screen selection
+Stage2 routes have direct manual trial buttons (3 lives, LV2, shield1, unranked).
+Normal play still starts Stage1 and preserves earned equipment. The route chooser
+is now overlaid within the game screen, avoiding a page scroll after the boss.
