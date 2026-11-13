@@ -127,6 +127,20 @@ export function draw(ctx,w,assets,{paused=false,demo=false,highScore=0,recordEli
  if(b){
   if(b.defeated)defeatSprite(ctx,b,assets);
   else{
+  if(b.specialWarn>0){
+   const color=w.stage.theme==='cobalt'?mint:accent;
+   if(b.safeGap){
+    const gap=b.safeGap;line(ctx,5,gap.top+4,195,gap.top+4,mint,5);line(ctx,5,gap.bottom-4,195,gap.bottom-4,mint,5);
+    text(ctx,'SAFE',12,(gap.top+gap.bottom)/2,mint,undefined,6);
+   }
+   for(const shot of b.specialShots){
+    if(shot.wing>=0&&b.wings[shot.wing]<=0)continue;
+    const scale=b.safeGap?165:64;
+    line(ctx,shot.x,shot.y,shot.x+shot.vx*scale,shot.y+shot.vy*scale,color,5);
+    rect(ctx,shot.x-2,shot.y-2,4,4,color);
+   }
+   rect(ctx,70,35,180,10,ink);text(ctx,b.specialLabel,160,43,color,'center',6);
+  }
   if(b.volleyWarn>0){
    const count=b.volleyCount||3,mx=b.volleyX??b.x-34,my=b.volleyY??b.y;
    for(let i=0;i<count;i++){const angle=(b.volleyAngle??Math.PI)+(i-(count-1)/2)*C.bossFanStep;line(ctx,mx,my,mx+Math.cos(angle)*48,my+Math.sin(angle)*48,accent,4);}

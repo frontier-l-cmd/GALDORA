@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {makeWorld,update,summonBoss} from '../src/game/world.mjs';
+import {makeWorld,update,summonBoss,continueRoute} from '../src/game/world.mjs';
 import {CONFIG as C} from '../src/data/config.mjs';
 import {draw} from '../src/render/draw.mjs';
 let frames=0,rendered=0;
@@ -27,3 +27,9 @@ function run(seed){
 const one=run(718),repeat=run(718);assert.deepEqual(one,repeat);const other=run(123);
 for(const frame of [0,32,70,110,145,162]){const w=makeWorld();summonBoss(w);w.boss.x=243;w.boss.y=112;w.boss.hp=1;w.shots.spawn({x:230,y:112,vx:5,vy:0,life:30});update(w);for(let i=0;i<frame;i++)update(w);render(w);assert.equal(w.state,frame===162?'clear':'play')}
 console.log(JSON.stringify({status:'PASS',kind:'simulation/renderer regression, not manual play',simulationFrames:frames,renderedFrames:rendered,drawCalls:calls,runs:[one,other],assets:names.length},null,2));
+
+for(const id of ['routeA','routeB']){
+ const w=makeWorld(718,id);summonBoss(w);w.debugInvincible=true;w.boss.x=243;w.boss.age=150;w.boss.nextBeam=99999;
+ for(let n=0;n<900;n++){update(w);if(n%5===0)render(w);}
+}
+console.log('branch boss rendering: PASS (warnings, flights, recovery)');

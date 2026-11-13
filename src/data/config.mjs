@@ -24,6 +24,11 @@ export const CONFIG = Object.freeze({
  bossArrival:5400, bossWarning:300, bossTimeout:3600, stageFinish:9200,
  bossDefeat:{duration:162,breakFrames:[48,72],burstFrame:108,aftermathFrame:126,
   explosionFrames:[1,19,37,58,81,99],fragmentLimit:12,shake:1.3},
+ branchBoss:{
+  amber:{warning:60,count:3,step:.18,speed:1.2,life:300},
+  cobalt:{warning:90,gapHalfHeight:30,laneStep:14,speed:1.25,life:300,originX:212,
+   gapCenters:[64,112,176],top:32,bottom:207},
+ },
  bossHealth:180, wingHealth:22, bossStart:{x:370,y:112}, bossStopX:243,
  bossEnterSpeed:1, bossRetreatSpeed:3, bossRetreatX:420,
  bossSwayAmplitude:38, bossSwayFrequency:.012, bossAlignSpeed:1.5, bossPhaseThresholds:[.6,.3],

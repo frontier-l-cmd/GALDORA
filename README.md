@@ -4,6 +4,13 @@ Original side-scrolling shooter, in development.
 
 **Play:** https://frontier-l-cmd.github.io/GALDORA/
 
+## Build 008 · Branch boss patterns
+
+- AMBER adds telegraphed wing crossfire; COBALT adds a moving bullet gate with a marked safe lane. Existing boss sprites are still provisional and shared.
+- New volleys wait for previous bullets to clear, then recover. Stage 1 and boss HP are unchanged.
+- Use **空域ボスだけ** / **遺構ボスだけ** for direct unranked boss trials. In-game route selection and full-route debug remain available.
+- Automated simulation, warning/cleanup, renderer and interface checks pass. Real-device feel and human difficulty still need playtesting.
+
 ## Build 005 · Stage One
 
 A playable development milestone, not the finished game or final Stage 1 artwork/balance.

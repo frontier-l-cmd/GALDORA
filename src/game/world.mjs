@@ -74,6 +74,7 @@ export function summonBoss(w){
   start:w.frame,escape:false,defeated:false,warn:0,beamY:C.bossStart.y,beamTicks:0,
   beamHalfHeight:C.beamHalfHeight,beamX:C.bossStart.x+C.bossMuzzleX,nextBeam:C.beamFirstAge,
   hitFlash:0,wingFlash:[0,0],attack:'entry',attackRecovery:0,nextVolley:0,
+  specialWarn:0,specialShots:[],safeGap:null,specialLabel:'',
   volleyWarn:0,volleyAngle:Math.PI,volleyX:C.bossStart.x+C.bossMuzzleX,volleyY:C.bossStart.y,
   volleyCount:C.bossShotCounts[1],volleySpeed:C.bossShotSpeeds[1],wingWarn:0,wingLanes:[]};
  w.events.push('boss');
@@ -167,7 +168,7 @@ function finishStage(w,reason,bossBonus=0){
 // Keep `play` until all debris has cleared so pause and record saving stay natural.
 function beginBossDefeat(w,b){
  if(b.defeated)return;
- b.defeated=true;b.defeatAge=0;b.defeatStage='collapse';b.bodyVisible=true;
+ b.defeated=true;b.specialWarn=0;b.specialShots=[];b.safeGap=null;b.defeatAge=0;b.defeatStage='collapse';b.bodyVisible=true;
  b.defeatX=b.x;b.defeatY=b.y;b.rotation=0;b.shake=0;b.defeatFlash=0;
  b.fragments=[];b.explosions=[];
  b.defeatBonus=C.bossScore+Math.max(0,C.bossSpeedBonus-Math.floor(b.age/C.bossBonusDivisor));
@@ -237,7 +238,40 @@ function recoverBoss(b){
  b.attack='recovery';b.attackRecovery=C.bossAttackRecovery;
 }
 
+function beginBranchAttack(w,b,p){
+ const kind=w.stage.theme,d=C.branchBoss[kind];
+ b.specialShots=[];b.safeGap=null;
+ if(kind==='amber'){
+  b.specialLabel='CROSSWIND / MOVE';
+  // Both emitters lock now, not at fire time. Broken wings stop emitting.
+  for(let wing=0;wing<2;wing++)if(b.wings[wing]>0){
+   const x=b.x+C.wingOffset.x,y=b.y+(wing?C.wingOffset.y:-C.wingOffset.y);
+   const angle=Math.atan2(p.y-y,p.x-x);
+   for(let i=0;i<d.count;i++){
+    const a=angle+(i-(d.count-1)/2)*d.step;
+    b.specialShots.push({wing,x,y,vx:Math.cos(a)*d.speed,vy:Math.sin(a)*d.speed,life:d.life});
+   }
+  }
+ }else{
+  b.specialLabel='GATE / SAFE LANE';
+  const center=d.gapCenters[b.nextVolley%d.gapCenters.length];
+  b.safeGap={top:center-d.gapHalfHeight,bottom:center+d.gapHalfHeight};
+  for(let y=d.top;y<=d.bottom;y+=d.laneStep){
+   if(y>=b.safeGap.top&&y<=b.safeGap.bottom)continue;
+   b.specialShots.push({wing:-1,x:d.originX,y,vx:-d.speed,vy:0,life:d.life});
+  }
+ }
+ b.specialWarn=d.warning;b.attack='special-warning';w.events.push('charge');
+}
+
 function updateBossAttack(w,b,p){
+ if(b.specialWarn>0){
+  if(--b.specialWarn===0){
+   for(const shot of b.specialShots)if(shot.wing<0||b.wings[shot.wing]>0)w.bullets.spawn({...shot});
+   b.attack='flight';w.events.push('volley');
+  }
+  return;
+ }
  // Attacks are mutually exclusive, including the lifetime of their bullets.
  // The recovery clock starts only once the playfield is empty, so there is a
  // real, learnable breathing window instead of a nominal pause between walls.
@@ -284,6 +318,9 @@ function updateBossAttack(w,b,p){
   b.nextBeam=b.age+C.beamIntervals[b.phase];w.events.push('charge');
   return;
  }
+ if(w.stageNumber===2&&b.nextVolley%2===0){
+  b.nextVolley++;beginBranchAttack(w,b,p);return;
+ }
  const useWings=b.nextVolley++%2===1&&b.wings.some(hp=>hp>0);
  if(useWings){
   b.attack='wing-warning';b.wingWarn=C.bossWingWarning;
@@ -305,7 +342,7 @@ function updateBoss(w){
  // Retreat is a separate movement state. Clamping x to the entry point here
  // would otherwise prevent the boss ever reaching its exit boundary.
  if(b.age>=C.bossTimeout||b.escape){
-  b.escape=true;b.warn=0;b.beamTicks=0;b.volleyWarn=0;b.wingWarn=0;
+  b.escape=true;b.specialWarn=0;b.specialShots=[];b.safeGap=null;b.warn=0;b.beamTicks=0;b.volleyWarn=0;b.wingWarn=0;
   b.attack='escape';b.attackRecovery=0;w.bullets.clear();b.x+=C.bossRetreatSpeed;
   if(b.x>C.bossRetreatX)finishStage(w,'timeout');
   return;
@@ -314,7 +351,7 @@ function updateBoss(w){
  // Hold the muzzle still while its telegraph is displayed. The preview and
  // actual projectile use the same locked origin, angle, count and speed.
  const targetY=b.warn||b.beamTicks?b.beamY:
-  b.volleyWarn||b.wingWarn?b.y:C.bossStart.y+Math.sin(b.age*C.bossSwayFrequency)*C.bossSwayAmplitude;
+  b.volleyWarn||b.wingWarn||b.specialWarn?b.y:C.bossStart.y+Math.sin(b.age*C.bossSwayFrequency)*C.bossSwayAmplitude;
  b.y+=clamp(targetY-b.y,-C.bossAlignSpeed,C.bossAlignSpeed);
  b.beamX=b.x+C.bossMuzzleX;
  updateBossAttack(w,b,p);

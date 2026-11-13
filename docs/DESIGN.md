@@ -15,3 +15,6 @@ Build007: user requested no-scroll in-screen route selection and direct Stage2
 practice. Selector is inside .screen; each route has a direct manual trial button.
 Trial begins with 3 lives, LV2 and shield1; no high-score writes. Normal Stage1
 and earned carryover are unchanged. Mobile/landscape layout uses compact controls.
+
+## Build008 / 2026-11-13
+Stage2 boss behavior prototype: AMBER uses two locked wing-origin fans; COBALT uses a horizontal gate with a broad safe corridor. Attacks remain exclusive, warning/recovery protected, and Stage1 mechanics/health remain unchanged. Existing boss art is provisional. Boss-only unranked trial buttons avoid replaying the approach.

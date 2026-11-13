@@ -56,3 +56,9 @@ for(const [width,height] of [[390,844],[320,568],[844,390],[667,375]]){
  assert.ok(parseFloat(canvas.style.height)>=150,`${width}x${height} selector space`);
 }
 console.log('interface-007 sizing: PASS (320/390 portrait, 667/844 landscape)');
+
+for(const [button,id] of [['#boss-a','routeA'],['#boss-b','routeB']]){
+ nodes.get('#trial-details').open=true;nodes.get(button).emit('click');assert.equal(nodes.get('#trial-details').open,false);assert.equal(test.world.stageId,id);assert.ok(test.world.boss);assert.equal(test.diagnostics.recordEligible,false);assert.equal(test.paused,false);test.pause();assert.equal(test.paused,true);
+}
+test.start();assert.equal(test.world.stageId,'stage1');assert.equal(test.world.boss,null);assert.equal(test.paused,false);
+console.log('interface-008: PASS (direct branch bosses, unranked, pause/restart reset)');

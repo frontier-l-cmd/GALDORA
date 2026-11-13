@@ -106,15 +106,19 @@ function stageSelect(){
  sound.setScene('clear');sound.silence();canvas.focus({preventScroll:true});show();
 }
 $('#stage-select')?.addEventListener('click',stageSelect);
-function trialRoute(id){
+function trialRoute(id,bossOnly=false){
+ const details=$('#trial-details');if(details){details.open=false;resize();}
  if(id!=='routeA'&&id!=='routeB')return;
  auto.checked=false;world=makeWorld(718,id);world.player.level=2;world.player.shield=1;
  paused=false;recordEligible=false;runRecorded=false;resetInput();
  sound.setScene('clear');sound.silence();sound.setScene('stage');void sound.unlock();
+ if(bossOnly){summonBoss(world);presentation.reset(world);sound.setScene('boss');}
  canvas.focus({preventScroll:true});show();
 }
 $('#trial-a')?.addEventListener('click',()=>trialRoute('routeA'));
 $('#trial-b')?.addEventListener('click',()=>trialRoute('routeB'));
+$('#boss-a')?.addEventListener('click',()=>trialRoute('routeA',true));
+$('#boss-b')?.addEventListener('click',()=>trialRoute('routeB',true));
 function chooseRoute(id){
  if(world.state!=='clear'||!world.routeChoices?.some(route=>route.id===id))return;
  const next=continueRoute(world,id);if(!next)return;
